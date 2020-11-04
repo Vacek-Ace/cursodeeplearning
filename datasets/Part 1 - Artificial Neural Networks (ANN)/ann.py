@@ -6,7 +6,7 @@ Created on Sun Apr 28 10:38:56 2019
 @author: juangabriel
 """
 
-# Redes Neuronales Artificales
+# Redes Neuronales Artificiales
 
 # Instalar Theano
 # pip install --upgrade --no-deps git+git://github.com/Theano/Theano.git
@@ -23,35 +23,24 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 # Importar el data set
-dataset = pd.read_csv('Churn_Modelling.csv')
+dataset = pd.read_csv('datasets/Part 1 - Artificial Neural Networks (ANN)/Churn_Modelling.csv')
 
 X = dataset.iloc[:, 3:13].values
 y = dataset.iloc[:, 13].values
 
 # Codificar datos categóricos
-from sklearn.preprocessing import LabelEncoder
+from sklearn.preprocessing import LabelEncoder, OneHotEncoder
+from sklearn.compose import ColumnTransformer
+
 labelencoder_X_1 = LabelEncoder()
 X[:, 1] = labelencoder_X_1.fit_transform(X[:, 1])
 labelencoder_X_2 = LabelEncoder()
 X[:, 2] = labelencoder_X_2.fit_transform(X[:, 2])
+onehotencoder = ColumnTransformer(
+    [('one_hot_encoder', OneHotEncoder(categories='auto'), [1])],
+    remainder='passthrough')
 
-#El OneHotEncoder en las nuevas versiones está OBSOLETO
-#onehotencoder = OneHotEncoder(categorical_features=[1])
-#X = onehotencoder.fit_transform(X).toarray()
-
-from sklearn.preprocessing import OneHotEncoder
-from sklearn.compose import ColumnTransformer
-
-transformer = ColumnTransformer(
-    transformers=[
-        ("Churn_Modelling",        # Un nombre de la transformación
-         OneHotEncoder(categories='auto'), # La clase a la que transformar
-         [1]            # Las columnas a transformar.
-         )
-    ], remainder='passthrough'
-)
-
-X = transformer.fit_transform(X)
+X = onehotencoder.fit_transform(X)
 X = X[:, 1:]
 
 # Dividir el data set en conjunto de entrenamiento y conjunto de testing
@@ -77,15 +66,15 @@ from keras.layers import Dropout
 classifier = Sequential()
 
 # Añadir las capas de entrada y primera capa oculta
-classifier.add(Dense(units = 6, kernel_initializer = "uniform",  activation = "relu", input_dim = 11))
-classifier.add(Dropout(p = 0.1))
+classifier.add(Dense(units = 6, kernel_initializer = "uniform", activation = "relu", input_dim = 11))
+classifier.add(Dropout(rate = 0.1))
 
 # Añadir la segunda capa oculta
-classifier.add(Dense(units = 6, kernel_initializer = "uniform",  activation = "relu"))
-classifier.add(Dropout(p = 0.1))
+classifier.add(Dense(units = 6, kernel_initializer = "uniform", activation = "relu"))
+classifier.add(Dropout(rate = 0.1))
 
 # Añadir la capa de salida
-classifier.add(Dense(units = 1, kernel_initializer = "uniform",  activation = "sigmoid"))
+classifier.add(Dense(units = 1, kernel_initializer = "uniform", activation = "sigmoid"))
 
 # Compilar la RNA
 classifier.compile(optimizer = "adam", loss = "binary_crossentropy", metrics = ["accuracy"])
@@ -97,7 +86,10 @@ classifier.fit(X_train, y_train,  batch_size = 10, epochs = 100)
 # Parte 3 - Evaluar el modelo y calcular predicciones finales
 
 # Predicción de los resultados con el Conjunto de Testing
-y_pred  = classifier.predict(X_test)
+# x_test = sc_X.transform(np.array([0, 0, 600, 1, 42, 3, 2, 60000, 1, 1, 50000]).reshape(1, -1))
+# classifier.predict(x_test)
+y_pred = classifier.predict(X_test)
+
 y_pred = (y_pred>0.5)
 
 # Elaborar una matriz de confusión
@@ -133,9 +125,9 @@ from sklearn.model_selection import GridSearchCV # sklearn.grid_search
 
 def build_classifier(optimizer):
   classifier = Sequential()
-  classifier.add(Dense(units = 6, kernel_initializer = "uniform",  activation = "relu", input_dim = 11))
-  classifier.add(Dense(units = 6, kernel_initializer = "uniform",  activation = "relu"))
-  classifier.add(Dense(units = 1, kernel_initializer = "uniform",  activation = "sigmoid"))
+  classifier.add(Dense(units = 6, kernel_initializer = "uniform", activation = "relu", input_dim = 11))
+  classifier.add(Dense(units = 6, kernel_initializer = "uniform", activation = "relu"))
+  classifier.add(Dense(units = 1, kernel_initializer = "uniform", activation = "sigmoid"))
   classifier.compile(optimizer = optimizer, loss = "binary_crossentropy", metrics = ["accuracy"])
   return classifier
 
@@ -143,13 +135,13 @@ classifier = KerasClassifier(build_fn = build_classifier)
 
 parameters = {
     'batch_size' : [25,32],
-    'nb_epoch' : [100, 500], 
+    'nb_epoch' : [100, 500],
     'optimizer' : ['adam', 'rmsprop']
 }
 
-grid_search = GridSearchCV(estimator = classifier, 
-                           param_grid = parameters, 
-                           scoring = 'accuracy', 
+grid_search = GridSearchCV(estimator = classifier,
+                           param_grid = parameters,
+                           scoring = 'accuracy',
                            cv = 10)
 grid_search = grid_search.fit(X_train, y_train)
 best_parameters = grid_search.best_params_

@@ -17,7 +17,7 @@ Created on Mon Apr 29 19:20:59 2019
 
 # Parte 1 - Construir el modelo de CNN
 
-# Importar las liobrerías y paquetes
+# Importar las librerías y paquetes
 from keras.models import Sequential
 from keras.layers import Conv2D
 from keras.layers import MaxPooling2D
@@ -28,8 +28,8 @@ from keras.layers import Dense
 classifier = Sequential()
 
 # Paso 1 - Convolución
-classifier.add(Conv2D(filters = 32,kernel_size = (3, 3), 
-                      input_shape = (64, 64, 3), activation = "relu"))
+classifier.add(Conv2D(filters = 32, kernel_size = (3, 3),
+                        input_shape = (64, 64, 3), activation = "relu"))
 
 # Paso 2 - Max Pooling
 classifier.add(MaxPooling2D(pool_size = (2,2)))
@@ -49,7 +49,7 @@ classifier.add(Dense(units = 1, activation = "sigmoid"))
 # Compilar la CNN
 classifier.compile(optimizer = "adam", loss = "binary_crossentropy", metrics = ["accuracy"])
 
-# Parte 2 - Ajustar la CNN a las imágenes para entrenar 
+# Parte 2 - Ajustar la CNN a las imágenes para entrenar
 from keras.preprocessing.image import ImageDataGenerator
 
 train_datagen = ImageDataGenerator(
@@ -60,19 +60,20 @@ train_datagen = ImageDataGenerator(
 
 test_datagen = ImageDataGenerator(rescale=1./255)
 
-training_dataset = train_datagen.flow_from_directory('dataset/training_set',
+training_dataset = train_datagen.flow_from_directory('datasets/Part 2 - Convolutional Neural Networks (CNN)/dataset/training_set',
                                                     target_size=(64, 64),
                                                     batch_size=32,
                                                     class_mode='binary')
 
-testing_dataset = test_datagen.flow_from_directory('dataset/test_set',
+testing_dataset = test_datagen.flow_from_directory('datasets/Part 2 - Convolutional Neural Networks (CNN)/dataset/test_set',
                                                 target_size=(64, 64),
                                                 batch_size=32,
                                                 class_mode='binary')
 
-classifier.fit_generator(training_dataset,
+classifier.fit(training_dataset,
                         steps_per_epoch=8000,
                         epochs=25,
+                        verbose=1,
                         validation_data=testing_dataset,
                         validation_steps=2000)
 
@@ -80,7 +81,7 @@ classifier.fit_generator(training_dataset,
 # Parte 3 - Cómo hacer nuevas predicciones
 import numpy as np
 from keras.preprocessing import image
-test_image = image.load_img('dataset/single_prediction/cat_or_dog_1.jpg', target_size = (64, 64))
+test_image = image.load_img('datasets/Part 2 - Convolutional Neural Networks (CNN)/dataset/single_prediction/cat_or_dog_1.jpg', target_size = (64, 64))
 test_image = image.img_to_array(test_image)
 test_image = np.expand_dims(test_image, axis = 0)
 result = classifier.predict(test_image)
@@ -89,7 +90,4 @@ if result[0][0] == 1:
     prediction = 'dog'
 else:
     prediction = 'cat'
-
-
-
 

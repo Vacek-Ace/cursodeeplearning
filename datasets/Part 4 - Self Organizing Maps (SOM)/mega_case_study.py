@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 # Importar el dataset
-dataset = pd.read_csv("Credit_Card_Applications.csv")
+dataset = pd.read_csv("datasets/Part 4 - Self Organizing Maps (SOM)/Credit_Card_Applications.csv")
 X = dataset.iloc[:, :-1].values
 y = dataset.iloc[:, -1].values
 
@@ -46,7 +46,7 @@ show()
 
 # Encontrar los fraudes
 mappings = som.win_map(X)
-frauds = np.concatenate( (mappings[(3,1)], mappings[(2,5)]), axis = 0 )
+frauds = np.concatenate( (mappings[(2,3)], mappings[(8,4)]), axis = 0 )
 frauds = sc.inverse_transform(frauds)
 
 
@@ -93,8 +93,10 @@ classifier.fit(customers, is_fraud,  batch_size = 1, epochs = 2)
 
 # Predicción de los resultados de fraude
 y_pred  = classifier.predict(customers)
-y_pred = np.concatenate((dataset.iloc[:,0:1].values, y_pred), axis = 1)
+y_pred = np.concatenate((dataset.iloc[:,0:1].values, dataset.iloc[:, -1].values.reshape(-1,1) , y_pred), axis = 1)
 y_pred = y_pred[y_pred[:,1].argsort()]
+
+pd.crosstab(y_pred[:, 1], (y_pred[:, 2] > 0.1)+0)
 
 
 

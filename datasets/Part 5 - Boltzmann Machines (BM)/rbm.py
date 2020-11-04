@@ -17,14 +17,14 @@ import torch.utils.data
 from torch.autograd import Variable
 
 # Importar el dataset
-movies = pd.read_csv("ml-1m/movies.dat", sep = '::', header = None, engine = 'python', encoding = 'latin-1')
-users  = pd.read_csv("ml-1m/users.dat", sep = '::', header = None, engine = 'python', encoding = 'latin-1')
-ratings  = pd.read_csv("ml-1m/ratings.dat", sep = '::', header = None, engine = 'python', encoding = 'latin-1')
+movies = pd.read_csv("datasets/Part 5 - Boltzmann Machines (BM)/ml-1m/movies.dat", sep = '::', header = None, engine = 'python', encoding = 'latin-1')
+users  = pd.read_csv("datasets/Part 5 - Boltzmann Machines (BM)/ml-1m/users.dat", sep = '::', header = None, engine = 'python', encoding = 'latin-1')
+ratings  = pd.read_csv("datasets/Part 5 - Boltzmann Machines (BM)/ml-1m/ratings.dat", sep = '::', header = None, engine = 'python', encoding = 'latin-1')
 
-# Preparar el conjunto de entrenamiento y elconjunto de testing
-training_set = pd.read_csv("ml-100k/u1.base", sep = "\t", header = None)
+# Preparar el conjunto de entrenamiento y el conjunto de testing
+training_set = pd.read_csv("datasets/Part 5 - Boltzmann Machines (BM)/ml-100k/u1.base", sep = "\t", header = None)
 training_set = np.array(training_set, dtype = "int")
-test_set = pd.read_csv("ml-100k/u1.test", sep = "\t", header = None)
+test_set = pd.read_csv("datasets/Part 5 - Boltzmann Machines (BM)/ml-100k/u1.test", sep = "\t", header = None)
 test_set = np.array(test_set, dtype = "int")
 
 # Obtener el número de usuarios y de películas
@@ -60,7 +60,7 @@ test_set[test_set == 1] = 0
 test_set[test_set == 2] = 0
 test_set[test_set >= 3] = 1
 
-# Crear la arquitectura de la Red Neuronal (Modelo Probabilistico Gráfico)
+# Crear la arquitectura de la Red Neuronal (Modelo Probabilístico Gráfico)
 class RBM():
     def __init__(self, nv, nh):
         self.W = torch.randn(nh, nv)
@@ -75,12 +75,12 @@ class RBM():
         wy = torch.mm(y, self.W) #mini_batch_size x nv
         activation = wy + self.b.expand_as(wy)
         p_v_given_h = torch.sigmoid(activation)
-        return p_v_given_h, torch.bernoulli(p_v_given_h)   
+        return p_v_given_h, torch.bernoulli(p_v_given_h)
     def train(self, v0, vk, ph0, phk):
         self.W += (torch.mm(v0.t(), ph0) - torch.mm(vk.t(), phk)).t()
         self.b += torch.sum((v0 - vk), 0)
         self.a += torch.sum((ph0 - phk), 0)
-        
+
 nv = len(training_set[0])
 nh = 100
 batch_size = 100
@@ -99,7 +99,7 @@ for epoch in range(1, nb_epoch+1):
         for k in range(10):
             _,hk = rbm.sample_h(vk)
             _,vk = rbm.sample_v(hk)
-            vk[v0 < 0] = v0[v0 < 0]
+            vk[v0 < 0] = v0[v0 < 0] # evita las valoraciones iguales a -1
         phk,_ = rbm.sample_h(vk)
         rbm.train(v0, vk, ph0, phk)
         training_loss += torch.mean(torch.abs(v0[v0>=0] - vk[v0>=0]))
